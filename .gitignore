@@ -1,0 +1,8 @@
+node_modules
+dist
+.env.local
+.env.*.local
+*.tsbuildinfo
+# Real device payloads from lab devices — never commit
+fixtures-private/
+*.devicelink.csv
