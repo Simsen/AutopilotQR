@@ -29,6 +29,8 @@ jobs:
       - run: npm run build
         env:
           VITE_CLIENT_ID: ${{ vars.VITE_CLIENT_ID }}
+          # Custom domain -> "/", otherwise https://<user>.github.io/<repo>/
+          VITE_BASE_PATH: ${{ vars.PAGES_DOMAIN != '' && '/' || format('/{0}/', github.event.repository.name) }}
       - run: echo "${{ vars.PAGES_DOMAIN }}" > dist/CNAME
         if: ${{ vars.PAGES_DOMAIN != '' }}
       - uses: actions/upload-pages-artifact@v3
