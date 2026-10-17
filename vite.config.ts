@@ -26,7 +26,8 @@ const csp = (): Plugin => ({
 
 export default defineConfig({
   plugins: [react(), csp()],
-  base: "/",
+  // "/" for a custom domain; "/<repo>/" for https://<user>.github.io/<repo>/ (set by the deploy workflow).
+  base: process.env.VITE_BASE_PATH || "/",
   build: { target: "es2022", sourcemap: false },
   test: { environment: "node" },
 });
