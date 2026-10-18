@@ -21,6 +21,8 @@ Everything runs in your browser. Tokens and device data go only to Microsoft. Th
 
 **Device** (Microsoft's requirements for device association):
 - Physical device, Windows 11 24H2/25H2 with **KB5120998** or later (build 26100/26200 **.9278+**)
+- Windows 11 26H2 is not yet in Microsoft's documented list — test before you roll out
+- x64 is the safest choice; Arm64 devices (e.g. Snapdragon) have been reported to be less reliable — test before you roll out
 - TPM 2.0 enabled and ready, UEFI, **Secure Boot on**
 - Network access to `ztd.dds.microsoft.com` and `*.attest.azure.net`
 
@@ -80,6 +82,7 @@ Camera access needs HTTPS or `localhost`. To test on a phone, deploy or use an H
 | "Microsoft could not import this device" (HTTP 500) | Device doesn't meet requirements — check **Secure Boot**, TPM, build. Retrying won't help. Quote the request ID to Microsoft support. |
 | "Not allowed" (401/403) | Missing Intune role or admin consent |
 | No "Scan QR code" option in OOBE | Build below .9278 — install the latest cumulative update |
+| Fails on an Arm64 or 26H2 device | Less tested. Rule out tenant issues with an x64 device on 25H2, then please open an issue |
 | QR won't scan | Fill the frame, straight on, no glare — or use "Take a photo" |
 
 ## Development

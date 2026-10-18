@@ -15,6 +15,7 @@ import {
   type TenantAssociatedDevice,
 } from "./lib/graph";
 import { Scanner } from "./components/Scanner";
+import { Landing } from "./components/Landing";
 
 type Step =
   | { kind: "scan"; notice?: string }
@@ -72,31 +73,18 @@ export default function App() {
 
   if (!account)
     return (
-      <Shell>
-        <div className="card">
-          <h2>Pre-associate Windows devices from a QR code</h2>
-          <ol className="steps">
-            <li>Sign in with your Intune admin account.</li>
-            <li>On the Windows device in OOBE, press the <b>Windows key five times</b>, select <b>Device association</b>, and scan the QR code shown on screen.</li>
-            <li>Pick a Device Preparation policy, confirm the tenant, and associate.</li>
-            <li>Click <b>Next</b> on the device to complete association.</li>
-          </ol>
-          <p className="muted small">
-            Runs entirely in your browser. Tokens and device data go only to Microsoft — never to the developer.
-          </p>
-          {authError && <p className="error">{authError}</p>}
-          <button className="btn" onClick={() => signIn()}>Sign in with Microsoft</button>
-        </div>
+      <Shell wide>
+        <Landing onSignIn={() => signIn()} error={authError} />
       </Shell>
     );
 
   return <SignedIn account={account} />;
 }
 
-function Shell({ children, header }: { children: React.ReactNode; header?: React.ReactNode }) {
+function Shell({ children, header, wide }: { children: React.ReactNode; header?: React.ReactNode; wide?: boolean }) {
   return (
     <div className="page">
-      <div className="app">
+      <div className={wide ? "app wide" : "app"}>
         <header className="top">
           <span className="brand">Autopilot QR</span>
           {header}
