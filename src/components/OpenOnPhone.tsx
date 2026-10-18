@@ -37,7 +37,7 @@ export function OpenOnPhone() {
         )}
       </div>
       <p className="small muted">
-        Scan with your phone's camera to open this page there.
+        Scan with your phone's camera to open this page.
         <br />
         <span className="mono">{url.replace(/^https?:\/\//, "")}</span>
       </p>
