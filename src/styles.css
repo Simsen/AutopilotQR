@@ -145,7 +145,13 @@ body { font: 16px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   .step-grid { grid-template-columns: repeat(4, 1fr); }
   .step { display: block; }
   .step h3 { margin: 10px 0 4px; }
-  .faq { max-width: 720px; }
   .kv-list div { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
   .kv-list dd { margin: 0; }
 }
+
+   /* Mobile: footer pinned to the bottom of the viewport */
+   @media (max-width: 899px) {
+     .site-footer { position: fixed; left: 0; right: 0; bottom: 0; z-index: 10;
+       padding: 10px 16px calc(10px + env(safe-area-inset-bottom)); font-size: 11px; }
+     .page { padding-bottom: calc(44px + env(safe-area-inset-bottom)); }
+   }
