@@ -1,105 +1,161 @@
-# Autopilot QR
+# AutopilotQR
 
-Scan the **Windows Autopilot Device Preparation** OOBE QR code with a phone or webcam and pre-associate the device in Intune — no CSV, no USB stick.
+**Scan. Associate. Deploy.**
 
-**Sign in → Scan → Pick policy → Confirm tenant → Associate → click Next on the device.**
+**AutopilotQR** is a free, open-source browser app for **Windows Autopilot device preparation – Device Association**. Sign in to your own Microsoft Entra tenant, scan the QR code displayed during Windows out-of-box experience (OOBE), and pre-associate the device with Microsoft Intune.
 
-> Status: early preview. Uses Microsoft Graph **beta** (`deviceManagement/tenantAssociatedDevices`), the same API the Intune admin center uses. It can change without notice.
+**No CSV exports. No USB drives. No installation.** Just a modern browser on your phone or computer.
+
+### [🚀 Launch AutopilotQR](https://autopilotqr.app/) · [💻 Source code](https://github.com/Simsen/AutopilotQR) · [🐛 Report an issue](https://github.com/Simsen/AutopilotQR/issues)
+
+> [!IMPORTANT]
+> **Early preview.** AutopilotQR relies on a **Microsoft Graph beta** Device Association API that may change. Validate the complete workflow in a test tenant and on supported physical hardware before wider deployment.
 
 ## How it works
 
-1. On the device in OOBE (region screen), press the **Windows key five times** → **Scan QR code**.
-2. The QR contains a TPM-signed device identity (`devicelink:/1/?sn=…&data=…`, gzip + base64 JSON).
-3. The app converts it to the format Windows writes to `*.devicelink.csv` and calls
-   `POST /beta/deviceManagement/tenantAssociatedDevices/importTenantAssociatedDevice`.
-4. It reads the record back and only reports success when Intune says `preassociated`.
-5. Click **Next** on the device; Intune then shows `associated`.
+**Sign in → Scan → Choose policy → Confirm tenant → Associate → Continue OOBE**
 
-Everything runs in your browser. Tokens and device data go only to Microsoft. There is no backend and no telemetry.
+1. On a supported Windows 11 device at the **OOBE region screen**, press the **Windows key five times** and select **Scan QR code**.
+2. Open [autopilotqr.app](https://autopilotqr.app/) on your phone or computer and **sign in with your Microsoft Entra account**.
+3. **Scan the QR code** using your camera (or use the app's photo option).
+4. **Select the Device Preparation policy**, review the destination tenant, and confirm the association.
+5. AutopilotQR submits the DeviceLink information to Microsoft Graph and checks for the **`preassociated`** status.
+6. Continue on the Windows device. After the device completes the required association steps, its status can become **`associated`**.
+
+> [!TIP]
+> The QR code contains sensitive device-association information. Don't publish photos of real OOBE QR codes or paste the payload into public issues.
+
+## Why AutopilotQR?
+
+| Feature | What it means |
+| --- | --- |
+| **Works on your phone** | Scan an OOBE QR code using a mobile browser. |
+| **Your own tenant** | Multitenant Microsoft Entra sign-in; no separate app registration required for the hosted version, subject to tenant consent policy. |
+| **No backend** | The application runs in your browser and communicates directly with Microsoft identity services and Graph. |
+| **Delegated permissions** | Operations use the signed-in account and remain subject to Graph permissions and Intune RBAC. |
+| **Open source** | Review the implementation, report issues, or self-host. |
 
 ## Requirements
 
-**Device** (Microsoft's requirements for device association):
-- Physical device, Windows 11 24H2/25H2 with **KB5120998** or later (build 26100/26200 **.9278+**)
-- Windows 11 26H2 is not yet in Microsoft's documented list — test before you roll out
-- x64 is the safest choice; Arm64 devices (e.g. Snapdragon) have been reported to be less reliable — test before you roll out
-- TPM 2.0 enabled and ready, UEFI, **Secure Boot on**
-- Network access to `ztd.dds.microsoft.com` and `*.attest.azure.net`
+**Windows device**
 
-**Admin**: an account with Intune rights to manage device association and Device Preparation policies, in the tenant the device should join.
+- Physical, supported **Windows 11** device in OOBE.
+- As documented for this project's current preview: Windows 11 **24H2 or 25H2**, with **KB5120998 or later** (build **26100/26200.9278+**). Verify against Microsoft's current requirements before deployment.
+- **TPM 2.0**, **UEFI**, and **Secure Boot** enabled and ready.
+- Connectivity to `ztd.dds.microsoft.com` and `*.attest.azure.net`.
+- **Windows 11 26H2** and **Arm64** have not been established as supported by this project's testing; validate separately.
 
-## Why these permissions
+**Administrator and tenant**
 
-All **delegated** — the app acts as you and can never do more than your Intune role allows.
+- A Microsoft Entra work or school account in the **destination tenant**.
+- Appropriate **Intune RBAC** permissions to manage Device Association and access Device Preparation policies.
+- Consent for the app's **delegated Microsoft Graph permissions** (an administrator may need to approve these depending on tenant policy).
 
-| Scope | Used for |
-|---|---|
-| `DeviceManagementServiceConfig.ReadWrite.All` | Import the device and read the association record back |
-| `DeviceManagementConfiguration.Read.All` | List Device Preparation policies for the picker |
-| `User.Read` | Show who you are and which tenant you are in |
+## Permissions and privacy
 
-## Use the hosted version
+AutopilotQR requests these **delegated Microsoft Graph scopes**:
 
-Open the site, sign in, and an admin consents once for your tenant. If your tenant only allows consent to verified publishers, ask your admin to grant consent, or self-host.
+| Permission | Why it is needed |
+| --- | --- |
+| `DeviceManagementServiceConfig.ReadWrite.All` | Import the association data and read the association record. |
+| `DeviceManagementConfiguration.Read.All` | Read Device Preparation policies for selection. |
+| `User.Read` | Identify the signed-in account and tenant. |
 
-## Self-host (bring your own app registration)
+The hosted app uses **MSAL.js with authorization code + PKCE**; it does not use a client secret. Authentication tokens and association data are processed in the browser and sent to Microsoft services, **not to a developer-hosted backend**. The project states that it does not collect application telemetry. The destination tenant must be confirmed before import.
 
-1. **Entra admin center → App registrations → New registration**
-   - Supported account types: *single tenant* (self-host) or *multitenant* (public instance)
-   - Platform: **Single-page application**, redirect URI = your site origin with a trailing slash, e.g. `https://qr.contoso.com/`
-   - No client secret.
-2. API permissions → Microsoft Graph → **Delegated**: the three scopes above → *Grant admin consent*.
-3. Copy the **Application (client) ID**.
+> [!NOTE]
+> Delegated OAuth consent does **not** replace Intune RBAC. A successful sign-in does not guarantee that a user is authorized to associate devices.
+
+## Technical details
+
+The Windows OOBE QR payload uses a DeviceLink format similar to:
+
+```text
+devicelink:/1/?sn=…&data=…
+```
+
+AutopilotQR decodes the DeviceLink payload, converts it to the import format, and calls the Graph beta operation:
+
+```http
+POST /beta/deviceManagement/tenantAssociatedDevices/importTenantAssociatedDevice
+```
+
+The app then reads the association record and reports success only after Intune returns **`preassociated`**. This is distinct from the subsequent **`associated`** state.
+
+Core implementation files:
+
+- `src/lib/devicelink.ts` — DeviceLink parsing and conversion.
+- `src/lib/graph.ts` — Microsoft Graph operations.
+
+## Troubleshooting
+
+| Problem | What to check |
+| --- | --- |
+| **No “Scan QR code” option in OOBE** | Check the supported Windows build and applicable updates. |
+| **QR code won't scan** | Avoid glare, move closer, center the QR code, or use **Take a photo**. |
+| **401 / 403** | Check delegated permission consent and the account's Intune RBAC role. |
+| **Import fails / HTTP 500** | Check device prerequisites, TPM, Secure Boot, build, and networking. Record the Graph request ID for investigation. A 500 response is not definitive proof of a device prerequisite failure. |
+| **Arm64 or Windows 11 26H2 issue** | Test against the documented baseline first and report reproducible differences. |
+
+If you encounter a reproducible problem, [open an issue](https://github.com/Simsen/AutopilotQR/issues). Include the browser, Windows version/build, device architecture, sanitized error message and Graph request ID where available. **Never include QR payloads, access tokens, or customer identifiers.**
+
+## Self-hosting
+
+You can run AutopilotQR with your **own Microsoft Entra app registration**.
+
+1. Create an application registration under **Microsoft Entra admin center → App registrations**.
+2. Select **Single-page application (SPA)** and register the exact URL you will use, including the trailing slash (for example, `https://qr.contoso.com/`).
+3. Add the three **delegated Microsoft Graph permissions** listed above and grant consent as appropriate.
+4. Copy the **Application (client) ID** and set `VITE_CLIENT_ID`.
+5. Build and publish the static site over HTTPS. **No client secret is needed.**
 
 ### Run locally
 
 ```bash
-cp .env.example .env.local     # set VITE_CLIENT_ID; add http://localhost:5173/ as SPA redirect URI on a *dev* registration
+git clone https://github.com/Simsen/AutopilotQR.git
+cd AutopilotQR
+cp .env.example .env.local
+# Set VITE_CLIENT_ID in .env.local.
+# Add http://localhost:5173/ as a SPA redirect URI in your development app registration.
 npm ci
 npm run dev
 ```
 
-Camera access needs HTTPS or `localhost`. To test on a phone, deploy or use an HTTPS tunnel.
+Browser camera access requires **HTTPS** or a trustworthy local origin such as `localhost`.
 
-### Deploy to GitHub Pages
+### GitHub Pages deployment
 
-1. Repo → Settings → Pages → Source: **GitHub Actions**
-2. Repo → Settings → Variables → Actions: `VITE_CLIENT_ID` and, optionally, `PAGES_DOMAIN` (custom domain)
-3. Tag a release: `git tag v0.1.0 && git push --tags` — only tags deploy.
-
-## Security notes
-
-- Public client, auth code + PKCE (MSAL.js). No secrets anywhere.
-- Strict Content-Security-Policy: scripts only from this origin; network only to `login.microsoftonline.com` and `graph.microsoft.com`. The QR decoder (WASM) is self-hosted.
-- QR payloads are never logged or sent anywhere except Graph.
-- The target tenant (name + ID) must be confirmed before every import.
-- Treat the OOBE QR like a device credential: don't post photos of it.
-
-## Troubleshooting
-
-| Symptom | Likely cause |
-|---|---|
-| "Microsoft could not import this device" (HTTP 500) | Device doesn't meet requirements — check **Secure Boot**, TPM, build. Retrying won't help. Quote the request ID to Microsoft support. |
-| "Not allowed" (401/403) | Missing Intune role or admin consent |
-| No "Scan QR code" option in OOBE | Build below .9278 — install the latest cumulative update |
-| Fails on an Arm64 or 26H2 device | Less tested. Rule out tenant issues with an x64 device on 25H2, then please open an issue |
-| QR won't scan | Fill the frame, straight on, no glare — or use "Take a photo" |
-
-## Development
+1. In your fork: **Settings → Pages → Source: GitHub Actions**.
+2. Set repository **Actions variables**: `VITE_CLIENT_ID` and optionally `PAGES_DOMAIN`.
+3. Push a release tag to trigger the configured deployment workflow.
 
 ```bash
-npm test         # unit tests (synthetic fixtures; real-device golden test runs if fixtures-private/ exists)
+git tag v0.1.0
+git push --tags
+```
+
+For development checks:
+
+```bash
+npm test
 npm run typecheck
 npm run build
 ```
 
-`src/lib/devicelink.ts` — QR parsing and conversion (no dependencies).
-`src/lib/graph.ts` — the only module that knows Graph URLs.
+## Contributing and feedback
+
+AutopilotQR is a community project. Real-device testing and clear issue reports are especially valuable while the Device Association API is in beta.
+
+- [Report a bug or request an improvement](https://github.com/Simsen/AutopilotQR/issues)
+- [Explore the code](https://github.com/Simsen/AutopilotQR)
 
 ## Credits
 
-Graph contract and DeviceLink internals: [call4cloud Autopilot Device Association Script](https://github.com/call4cloud-code/Autopilot-Device-Association-Script) by Rudy Ooms. QR decoding: [zxing-wasm](https://github.com/Sec-ant/zxing-wasm).
+- [Rudy Ooms / call4cloud — Autopilot Device Association Script](https://github.com/call4cloud-code/Autopilot-Device-Association-Script), for research into DeviceLink and the Graph integration.
+- [zxing-wasm](https://github.com/Sec-ant/zxing-wasm), for QR decoding.
 
-## License
+## License and disclaimer
 
-MIT
+Licensed under the **MIT License** — see [LICENSE](LICENSE).
+
+AutopilotQR is an **independent community project**, not an official Microsoft product and not affiliated with, endorsed by, or supported by Microsoft. Microsoft, Windows, Intune and Autopilot are trademarks of the Microsoft group of companies.
