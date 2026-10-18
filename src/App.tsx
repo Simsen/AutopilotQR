@@ -77,8 +77,8 @@ export default function App() {
           <h2>Pre-associate Windows devices from a QR code</h2>
           <ol className="steps">
             <li>Sign in with your Intune admin account.</li>
-            <li>On the Windows device in OOBE, press the Windows key five times and choose <b>Scan QR code</b>.</li>
-            <li>Scan it, pick a Device Preparation policy, confirm the tenant, associate.</li>
+            <li>On the Windows device in OOBE, press the <b>Windows key five times</b>, select <b>Device association</b>, and scan the QR code shown on screen.</li>
+            <li>Pick a Device Preparation policy, confirm the tenant, and associate.</li>
             <li>Click <b>Next</b> on the device to complete association.</li>
           </ol>
           <p className="muted small">
@@ -95,12 +95,21 @@ export default function App() {
 
 function Shell({ children, header }: { children: React.ReactNode; header?: React.ReactNode }) {
   return (
-    <div className="app">
-      <header className="top">
-        <span className="brand">Autopilot QR</span>
-        {header}
-      </header>
-      <main>{children}</main>
+    <div className="page">
+      <div className="app">
+        <header className="top">
+          <span className="brand">Autopilot QR</span>
+          {header}
+        </header>
+        <main>{children}</main>
+      </div>
+      <footer className="site-footer">
+        AutopilotQR is owned and maintained by{" "}
+        <a href="https://www.linkedin.com/in/simoneriksendk/" target="_blank" rel="noopener noreferrer">
+          Simon Hartmann Eriksen
+        </a>
+        .
+      </footer>
     </div>
   );
 }
