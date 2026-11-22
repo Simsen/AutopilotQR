@@ -100,11 +100,22 @@ function Shell({ children, header, wide }: { children: React.ReactNode; header?:
         <main>{children}</main>
       </div>
       <footer className="site-footer">
-        AutopilotQR is owned and maintained by{" "}
+        Made by{" "}
         <a href="https://www.linkedin.com/in/simoneriksendk/" target="_blank" rel="noopener noreferrer">
           Simon Hartmann Eriksen
         </a>
-        .
+        {" · "}
+        <a href="https://www.simsenblog.dk/2026/10/18/introducing-autopilotqr-scan-associate-deploy/" target="_blank" rel="noopener noreferrer">
+          Read the write-up
+        </a>
+        {" · "}
+        <a href="https://www.simsenblog.dk/tools/" target="_blank" rel="noopener noreferrer">
+          More free tools
+        </a>
+        {" · "}
+        <a href="https://www.simsenblog.dk/" target="_blank" rel="noopener noreferrer">
+          simsenblog.dk
+        </a>
       </footer>
     </div>
   );
